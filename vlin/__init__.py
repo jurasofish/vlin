@@ -14,17 +14,6 @@ class Expr(sparse.csr_matrix):
         """ Convert expression to raw sparse matrix. """
         return self.base(self)
 
-    def promote_constant(self, k: Union[Real, np.ndarray]) -> 'Expr':
-        """ Convert Real into a constant-valued linear expression. """
-        expr = self.base(self.shape, dtype=self.dtype)
-        expr[:, 0] = 1
-        if isinstance(k, np.ndarray):
-            assert k.ndim == 1
-            k = np.expand_dims(k, -1)
-            k = np.repeat(k, self.shape[-1], -1)
-        expr = expr.multiply(k)  # `expr * k` doesn't work ...
-        return self.__class__(expr)
-
     def __le__(self, other: Union['Expr', Real]) -> List['Expr']:
         """ x <= y  =>  x-y <= 0 """
         return [self - other]
@@ -39,13 +28,18 @@ class Expr(sparse.csr_matrix):
 
     def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
         if isinstance(other, (Real, np.ndarray)):
-            other = self.promote_constant(other)
+            expr = self.base(self.shape, dtype=self.dtype)
+            expr[:, 0] = 1
+            if isinstance(other, np.ndarray):
+                other = np.expand_dims(other, -1)
+            expr = expr.multiply(other)  # `expr * k` doesn't work ...
+            return super().__add__(expr)
         return super().__add__(other)
 
-    def __mul__(self, other: Real) -> 'Expr':
-        if not isinstance(other, Real):
-            raise NotImplementedError
-        return super().__mul__(other)
+    def __mul__(self, other: Union[Real, np.ndarray]) -> 'Expr':
+        if isinstance(other, np.ndarray):
+            other = np.expand_dims(other, -1)
+        return self.multiply(other)
 
     def __sub__(self, other: Union['Expr', Real]) -> 'Expr':
         return self.__add__(-1.0 * other)
@@ -129,6 +123,12 @@ def main():
     # Check sum with constant and with vector.
     assert np.allclose((a + 2.34).todense()[:, 0], 2.34)
     assert np.allclose((a + np.array([1.13, 3.01])).todense()[:, 0], [[1.13], [3.01]])
+
+    print(a.todense())
+    print((a*2).todense())
+    print((a*np.array([2, 3])).todense())
+
+    print(((a + 1) * np.array([2, 3])).todense())
 
     d = a + np.array([1, 3]) + 3
     m += a <= b
