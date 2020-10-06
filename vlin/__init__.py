@@ -8,16 +8,21 @@ class Expr(sparse.csr_matrix):
     """ A vector of linear expressions: Each row is a vector of var coefficients. """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.base = sparse.csr_matrix
 
     def raw(self) -> sparse.csr_matrix:
         """ Convert expression to raw sparse matrix. """
-        return sparse.csr_matrix(self)
+        return self.base(self)
 
-    def promote_constant(self, k: Real) -> 'Expr':
-        """ Convert a Real number into a constant-valued linear expression. """
-        expr = sparse.csr_matrix(self.shape, dtype=self.dtype)
+    def promote_constant(self, k: Union[Real, np.ndarray]) -> 'Expr':
+        """ Convert Real into a constant-valued linear expression. """
+        expr = self.base(self.shape, dtype=self.dtype)
         expr[:, 0] = 1
-        expr *= k
+        if isinstance(k, np.ndarray):
+            assert k.ndim == 1
+            k = np.expand_dims(k, -1)
+            k = np.repeat(k, self.shape[-1], -1)
+        expr = expr.multiply(k)  # `expr * k` doesn't work ...
         return self.__class__(expr)
 
     def __le__(self, other: Union['Expr', Real]) -> List['Expr']:
@@ -32,8 +37,8 @@ class Expr(sparse.csr_matrix):
         """ x == y  =>  x-y >= 0 AND x-y <= 0 """
         return (other <= self) + (self <= other)  # List of two linear expressions.
 
-    def __add__(self, other: Union['Expr', Real]) -> 'Expr':
-        if isinstance(other, Real):
+    def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
+        if isinstance(other, (Real, np.ndarray)):
             other = self.promote_constant(other)
         return super().__add__(other)
 
@@ -113,18 +118,23 @@ class Model:
         return self
 
     def combine_cons(self) -> Expr:
-        return sparse.vstack(self.cons, format='csr')
+        return sparse.vstack(self.cons)
 
 
 def main():
     m = Model()
     a = m.var(2)
     b = m.var(2)
-    c = a + 2
+
+    # Check sum with constant and with vector.
+    assert np.allclose((a + 2.34).todense()[:, 0], 2.34)
+    assert np.allclose((a + np.array([1.13, 3.01])).todense()[:, 0], [[1.13], [3.01]])
+
+    d = a + np.array([1, 3]) + 3
     m += a <= b
     m += a >= b
     m += a == b
-    m += c == a
+    m += a == d
     print(m.combine_cons().todense())
 
 
