@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.sparse as sparse
-from typing import List, Union
+from typing import List, Union, Sequence
 from numbers import Real
 
 
@@ -14,6 +14,11 @@ class Expr:
     @classmethod
     def zeros(self, shape, dtype=np.float64):
         """ Return instance of self all zeros. """
+        raise NotImplementedError
+
+    @classmethod
+    def vstack(self, tup: Sequence['Expr']):
+        """ apply vstack to given expressions. """
         raise NotImplementedError
 
     def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
@@ -94,6 +99,10 @@ class ExprNumpy(Expr, np.ndarray):
     def zeros(cls, shape, dtype=np.float64):
         return cls(np.zeros(shape, dtype=dtype))
 
+    @classmethod
+    def vstack(self, tup: Sequence['ExprNumpy']):
+        return np.vstack(tup)
+
     def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
         """ Implement me """
         expr = np.zeros(self.shape, dtype=self.dtype)
@@ -138,7 +147,7 @@ class Model:
         return self
 
     def combine_cons(self) -> Expr:
-        return sparse.vstack(self.cons)
+        return self.cons[0].vstack(self.cons)
 
 
 def main():
