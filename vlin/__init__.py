@@ -4,15 +4,12 @@ from typing import List, Union
 from numbers import Real
 
 
-class Expr(sparse.csr_matrix):
-    """ A vector of linear expressions: Each row is a vector of var coefficients. """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.base = sparse.csr_matrix
+class ExprBase:
+    """ An array of linear expressions: each expression is a vector of var coefficients. """
 
-    def raw(self) -> sparse.csr_matrix:
+    def raw(self):
         """ Convert expression to raw sparse matrix. """
-        return self.base(self)
+        raise NotImplementedError
 
     def __le__(self, other: Union['Expr', Real]) -> List['Expr']:
         """ x <= y  =>  x-y <= 0 """
@@ -27,19 +24,10 @@ class Expr(sparse.csr_matrix):
         return (other <= self) + (self <= other)  # List of two linear expressions.
 
     def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
-        if isinstance(other, (Real, np.ndarray)):
-            expr = self.base(self.shape, dtype=self.dtype)
-            expr[:, 0] = 1
-            if isinstance(other, np.ndarray):
-                other = np.expand_dims(other, -1)
-            expr = expr.multiply(other)  # `expr * k` doesn't work ...
-            return super().__add__(expr)
-        return super().__add__(other)
+        raise NotImplementedError
 
     def __mul__(self, other: Union[Real, np.ndarray]) -> 'Expr':
-        if isinstance(other, np.ndarray):
-            other = np.expand_dims(other, -1)
-        return self.multiply(other)
+        raise NotImplementedError
 
     def __sub__(self, other: Union['Expr', Real]) -> 'Expr':
         return self.__add__(-1.0 * other)
@@ -51,7 +39,7 @@ class Expr(sparse.csr_matrix):
         return self.__add__(other)
 
     def __rsub__(self, other: Union['Expr', Real]) -> 'Expr':
-        return (-self).__add__(other)
+        return (-1*self).__add__(other)
 
     def __rmul__(self, other: Real) -> 'Expr':
         return self.__mul__(other)
@@ -78,6 +66,32 @@ class Expr(sparse.csr_matrix):
         raise NotImplementedError
 
     # TODO: yada yada fill out the rest of these...
+
+
+class Expr(sparse.csr_matrix, ExprBase):
+    """ A vector of linear expressions: Each row is a vector of var coefficients. """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.base = sparse.csr_matrix
+
+    def raw(self) -> sparse.csr_matrix:
+        """ Convert expression to raw sparse matrix. """
+        return self.base(self)
+
+    def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
+        if isinstance(other, (Real, np.ndarray)):
+            expr = self.base(self.shape, dtype=self.dtype)
+            expr[:, 0] = 1
+            if isinstance(other, np.ndarray):
+                other = np.expand_dims(other, -1)
+            expr = expr.multiply(other)  # `expr * k` doesn't work ...
+            return super().__add__(expr)
+        return super().__add__(other)
+
+    def __mul__(self, other: Union[Real, np.ndarray]) -> 'Expr':
+        if isinstance(other, np.ndarray):
+            other = np.expand_dims(other, -1)
+        return self.multiply(other)
 
 
 class Model:
