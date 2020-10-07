@@ -11,13 +11,17 @@ class Expr:
         """ Convert expression to its raw underlying data type. """
         raise NotImplementedError
 
-    @classmethod
-    def zeros(self, shape, dtype=np.float64):
-        """ Return instance of self all zeros. """
+    def sum(self) -> 'Expr':
+        """ Return sum of vector as a vector with one element. """
         raise NotImplementedError
 
     @classmethod
-    def vstack(self, tup: Sequence['Expr']):
+    def zeros(self, shape: int, max_vars: int, dtype=np.float64) -> 'Expr':
+        """ Return vector instance of self all zeros. """
+        raise NotImplementedError
+
+    @classmethod
+    def vstack(self, tup: Sequence['Expr']) -> 'Expr':
         """ apply vstack to given expressions. """
         raise NotImplementedError
 
@@ -92,17 +96,20 @@ class ExprNumpy(Expr, np.ndarray):
         if obj is None: return
         self.base_cast = getattr(obj, 'base_cast', None)
 
-    def raw(self):
+    def raw(self) -> np.ndarray:
         """ Convert expression to numpy array """
         return np.array(self)
 
-    @classmethod
-    def zeros(cls, shape, dtype=np.float64):
-        return cls(np.zeros(shape, dtype=dtype))
+    def sum(self) -> 'ExprNumpy':
+        return self.raw().sum(axis=-2)
 
     @classmethod
-    def vstack(self, tup: Sequence['ExprNumpy']):
-        return np.vstack(tup)
+    def zeros(cls, shape: int, max_vars: int, dtype=np.float64) -> 'ExprNumpy':
+        return cls(np.zeros((shape, max_vars), dtype=dtype))
+
+    @classmethod
+    def vstack(cls, tup: Sequence['ExprNumpy']) -> 'ExprNumpy':
+        return cls(np.vstack(tup))
 
     def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
         """ Implement me """
@@ -112,7 +119,7 @@ class ExprNumpy(Expr, np.ndarray):
             other = np.array(other)
             expr *= np.expand_dims(other, tuple(range(other.ndim, self.ndim)))
         else:
-            expr = other
+            expr = other.raw()
         return self.__class__(np.add(self, expr))
 
     def __mul__(self, other: Union[Real, np.ndarray]) -> 'Expr':
@@ -127,7 +134,7 @@ class ExprNumpy(Expr, np.ndarray):
             other = np.array(other)
             expr *= np.expand_dims(other, tuple(range(other.ndim, self.ndim)))
         else:
-            expr = other
+            expr = other.raw()
         return [np.subtract(self, expr)]
 
 
@@ -150,8 +157,7 @@ class Model:
         """ Return linear expressions representing new variables. """
         start_idx = self.next_var_idx
         self.next_var_idx += n
-        # exprs = np.zeros((n, self.max_vars), dtype=self.dtype)
-        exprs = ExprNumpy.zeros((n, self.max_vars), dtype=self.dtype)
+        exprs = ExprNumpy.zeros(n, self.max_vars, dtype=self.dtype)
         var_idxs = np.arange(n)
         exprs[var_idxs, start_idx + var_idxs] = 1.0
         self.int_vars[var_idxs] = integer
@@ -203,40 +209,13 @@ def main():
     m += a == d
     print(m.combine_cons())
 
-    m = Model(max_vars=10)
-    x = m.var(3)
-    y = m.var(2)
-
-    A = np.array([[1., 2., 0], [1., 0, 1.]])
-    B = np.array([[1., 0, 0], [0, 0, 1.]])
-    D = np.array([[1., 2.], [0, 1]])
-    a = np.array([5, 2.5])
-    b = np.array([4.2, 3])
-    x_u = np.array([2., 3.5])
-
-    m += A @ x <= a
-    # print((B * x).shape)
-    # print((D * y).shape)
-    print((B @ x).shape)
-    print((D @ y).shape)
-    m += 2 <= B @ x + D @ y
-    m += B @ x + D @ y <= b
-    m += y >= 0
-    m += 1.1 <= x[1:3]
-    m += x[1:3] <= x_u
-
-    c = np.array([1., -2., 3.])
-    m.objective = c @ x + 2 * y.sum(axis=-2)
-
-    m.solve()
-
     m = Model(max_vars=4)
     a = m.var(3)
     m += a <= np.array([1, 2, 3])
     m += a >= 0
-    m += a[1] + a[2] <= 2
-    m += a[0] + a[1] <= 1
-    m.objective = -1 * a.sum(axis=-2)  # Maximise sum of them.
+    # m += a[1] + a[2] <= 2
+    # m += a[0] + a[1] <= 1
+    m.objective = -1 * a.sum()  # Maximise sum of them.
     res, x = m.solve()
     print(x)
     print(a.raw() @ x)
