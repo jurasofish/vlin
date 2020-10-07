@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.sparse as sparse
-from typing import List, Union, Sequence
+from typing import List, Union, Sequence, Optional
 from numbers import Real
 
 
@@ -106,9 +106,13 @@ class ExprNumpy(Expr, np.ndarray):
 
     def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
         """ Implement me """
-        expr = np.zeros(self.shape, dtype=self.dtype)
-        expr[..., 0] = 1  # Last axis
-        expr *= np.expand_dims(other, -1)
+        if not isinstance(other, Expr):
+            expr = np.zeros(self.shape, dtype=self.dtype)
+            expr[..., 0] = 1  # Last axis
+            other = np.array(other)
+            expr *= np.expand_dims(other, tuple(range(other.ndim, self.ndim)))
+        else:
+            expr = other
         return self.__class__(np.add(self, expr))
 
     def __mul__(self, other: Union[Real, np.ndarray]) -> 'Expr':
@@ -140,6 +144,8 @@ class Model:
 
         self.k = self.var()  # A linear expression equal to 1.0
 
+        self.objective: Optional[Expr] = None
+
     def var(self, n=1, integer: bool = False) -> Expr:
         """ Return linear expressions representing new variables. """
         start_idx = self.next_var_idx
@@ -161,6 +167,17 @@ class Model:
     def combine_cons(self) -> Expr:
         return self.cons[0].vstack(self.cons)
 
+    def solve(self):
+        from scipy.optimize import linprog
+        c = self.objective
+        cons = self.combine_cons()
+
+        res = linprog(
+            c=c,
+            A_ub=cons,
+            b_ub=np.zeros(cons.shape[0]),
+            bounds=(None, None)
+        )
 
 def main():
     m = Model()
@@ -195,7 +212,21 @@ def main():
     b = np.array([4.2, 3])
     x_u = np.array([2., 3.5])
 
-    m += A * x <= a
+    m += A @ x <= a
+    # print((B * x).shape)
+    # print((D * y).shape)
+    print((B @ x).shape)
+    print((D @ y).shape)
+    m += 2 <= B @ x + D @ y
+    m += B @ x + D @ y <= b
+    m += y >= 0
+    m += 1.1 <= x[1:3]
+    m += x[1:3] <= x_u
+
+    c = np.array([1., -2., 3.])
+    m.objective = c @ x + 2 * y.sum(axis=-2)
+
+    m.solve()
 
 
 if __name__ == '__main__':
