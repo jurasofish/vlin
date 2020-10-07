@@ -4,11 +4,24 @@ from typing import List, Union
 from numbers import Real
 
 
-class ExprBase:
+class Expr:
     """ An array of linear expressions: each expression is a vector of var coefficients. """
 
     def raw(self):
-        """ Convert expression to raw sparse matrix. """
+        """ Convert expression to its raw underlying data type. """
+        raise NotImplementedError
+
+    @classmethod
+    def zeros(self, shape, dtype=np.float64):
+        """ Return instance of self all zeros. """
+        raise NotImplementedError
+
+    def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
+        """ Implement me """
+        raise NotImplementedError
+
+    def __mul__(self, other: Union[Real, np.ndarray]) -> 'Expr':
+        """ Implement me """
         raise NotImplementedError
 
     def __le__(self, other: Union['Expr', Real]) -> List['Expr']:
@@ -22,12 +35,6 @@ class ExprBase:
     def __eq__(self, other: Union['Expr', Real]) -> List['Expr']:
         """ x == y  =>  x-y >= 0 AND x-y <= 0 """
         return (other <= self) + (self <= other)  # List of two linear expressions.
-
-    def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
-        raise NotImplementedError
-
-    def __mul__(self, other: Union[Real, np.ndarray]) -> 'Expr':
-        raise NotImplementedError
 
     def __sub__(self, other: Union['Expr', Real]) -> 'Expr':
         return self.__add__(-1.0 * other)
@@ -68,19 +75,19 @@ class ExprBase:
     # TODO: yada yada fill out the rest of these...
 
 
-class Expr(sparse.csr_matrix, ExprBase):
+class ExprSCR(Expr, sparse.csr_matrix):
     """ A vector of linear expressions: Each row is a vector of var coefficients. """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.base = sparse.csr_matrix
+        self.base_cast = sparse.csr_matrix
 
     def raw(self) -> sparse.csr_matrix:
         """ Convert expression to raw sparse matrix. """
-        return self.base(self)
+        return self.base_cast(self)
 
     def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
         if isinstance(other, (Real, np.ndarray)):
-            expr = self.base(self.shape, dtype=self.dtype)
+            expr = self.zeros(self.shape, dtype=self.dtype)
             expr[:, 0] = 1
             if isinstance(other, np.ndarray):
                 other = np.expand_dims(other, -1)
@@ -92,6 +99,39 @@ class Expr(sparse.csr_matrix, ExprBase):
         if isinstance(other, np.ndarray):
             other = np.expand_dims(other, -1)
         return self.multiply(other)
+
+
+class ExprNumpy(Expr, np.ndarray):
+
+    def __new__(cls, input_array, info=None):
+        # See https://numpy.org/devdocs/user/basics.subclassing.html
+        obj = np.asarray(input_array).view(cls)
+        obj.base_cast = np.array
+        return obj
+
+    def __array_finalize__(self, obj):
+        # See https://numpy.org/devdocs/user/basics.subclassing.html
+        if obj is None: return
+        self.base_cast = getattr(obj, 'base_cast', None)
+
+    def raw(self):
+        """ Convert expression to numpy array """
+        return np.array(self)
+
+    @classmethod
+    def zeros(cls, shape, dtype=np.float64):
+        return cls(np.zeros(shape, dtype=dtype))
+
+    def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
+        """ Implement me """
+        expr = np.zeros(self.shape, dtype=self.dtype)
+        expr[:, 0] = 1
+        expr *= np.expand_dims(other, -1)
+        return self.__class__(np.add(self, expr))
+
+    def __mul__(self, other: Union[Real, np.ndarray]) -> 'Expr':
+        """ Implement me """
+        return np.multiply(self, np.expand_dims(other, -1))
 
 
 class Model:
@@ -112,7 +152,7 @@ class Model:
         start_idx = self.next_var_idx
         self.next_var_idx += n
         # exprs = np.zeros((n, self.max_vars), dtype=self.dtype)
-        exprs = Expr((n, self.max_vars), dtype=self.dtype)
+        exprs = ExprNumpy.zeros((n, self.max_vars), dtype=self.dtype)
         var_idxs = np.arange(n)
         exprs[var_idxs, start_idx + var_idxs] = 1.0
         self.int_vars[var_idxs] = integer
@@ -135,14 +175,14 @@ def main():
     b = m.var(2)
 
     # Check sum with constant and with vector.
-    assert np.allclose((a + 2.34).todense()[:, 0], 2.34)
-    assert np.allclose((a + np.array([1.13, 3.01])).todense()[:, 0], [[1.13], [3.01]])
+    assert np.allclose(np.array(a + 2.34)[:, 0], 2.34)
+    assert np.allclose(np.array(a + np.array([2.34, 1.23]))[:, 0], np.array([2.34, 1.23]))
+    assert np.allclose(np.array(a + np.array([1.13, 3.01]))[:, 0], [1.13, 3.01])
 
-    print(a.todense())
-    print((a*2).todense())
-    print((a*np.array([2, 3])).todense())
+    print(a*2)
+    print(a*np.array([2, 3]))
 
-    print(((a + 1) * np.array([2, 3])).todense())
+    print((a + 1) * np.array([2, 3]))
 
     d = a + np.array([1, 3]) + 3
     m += a <= b
@@ -150,6 +190,19 @@ def main():
     m += a == b
     m += a == d
     print(m.combine_cons().todense())
+
+    m = Model(max_vars=10)
+    x = m.var(3)
+    y = m.var(2)
+
+    A = np.array([[1., 2., 0], [1., 0, 1.]])
+    B = np.array([[1., 0, 0], [0, 0, 1.]])
+    D = np.array([[1., 2.], [0, 1]])
+    a = np.array([5, 2.5])
+    b = np.array([4.2, 3])
+    x_u = np.array([2., 3.5])
+
+    m += A * x <= a
 
 
 if __name__ == '__main__':
