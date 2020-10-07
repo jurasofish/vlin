@@ -169,15 +169,17 @@ class Model:
 
     def solve(self):
         from scipy.optimize import linprog
-        c = self.objective
         cons = self.combine_cons()
 
         res = linprog(
-            c=c,
-            A_ub=cons,
-            b_ub=np.zeros(cons.shape[0]),
+            c=self.objective[1:],  # Remove constants,
+            A_ub=cons[:, 1:],  # All but the constants
+            b_ub=cons[:, 0] * -1.0,  # Constants only
             bounds=(None, None)
         )
+        x = np.hstack([[0], res.x])
+        return res, x
+
 
 def main():
     m = Model()
@@ -227,6 +229,17 @@ def main():
     m.objective = c @ x + 2 * y.sum(axis=-2)
 
     m.solve()
+
+    m = Model(max_vars=4)
+    a = m.var(3)
+    m += a <= np.array([1, 2, 3])
+    m += a >= 0
+    m += a[1] + a[2] <= 2
+    m += a[0] + a[1] <= 1
+    m.objective = -1 * a.sum(axis=-2)  # Maximise sum of them.
+    res, x = m.solve()
+    print(x)
+    print(a.raw() @ x)
 
 
 if __name__ == '__main__':
