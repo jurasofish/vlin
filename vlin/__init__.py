@@ -33,18 +33,18 @@ class Expr:
         """ Implement me """
         raise NotImplementedError
 
-    def __le__(self, other: Union['Expr', Real]) -> List['Expr']:
+    def __le__(self, other: Union['Expr', Real]) -> 'Expr':
         """ x <= y  =>  x-y <= 0 """
         raise NotImplementedError
 
-    def __ge__(self, other: Union['Expr', Real]) -> List['Expr']:
+    def __ge__(self, other: Union['Expr', Real]) -> 'Expr':
         """ Negative of less than or equal. """
-        return [-1.0*x for x in self.__le__(other)]
+        return -1.0 * self.__le__(other)
 
-    def __eq__(self, other: Union['Expr', Real]) -> List['Expr']:
+    def __eq__(self, other: Union['Expr', Real]) -> 'Expr':
         """ x == y  =>  x-y >= 0 AND x-y <= 0 """
-        con = (other <= self)[0]
-        return [con, -1.0 * con]
+        con = other <= self
+        return self.vstack([con, -1.0*con])
 
     def __sub__(self, other: Union['Expr', Real]) -> 'Expr':
         return self.__add__(-1.0 * other)
@@ -126,7 +126,7 @@ class ExprNumpy(Expr, np.ndarray):
         """ Implement me """
         return np.multiply(self, np.expand_dims(other, -1))
 
-    def __le__(self, other: Union['ExprNumpy', Real, float]) -> List['ExprNumpy']:
+    def __le__(self, other: Union['ExprNumpy', Real, float]) -> 'ExprNumpy':
         """ x <= y  =>  x-y <= 0 """
         if not isinstance(other, Expr):
             expr = np.zeros(self.shape, dtype=self.dtype)
@@ -135,7 +135,7 @@ class ExprNumpy(Expr, np.ndarray):
             expr *= np.expand_dims(other, tuple(range(other.ndim, self.ndim)))
         else:
             expr = other.raw()
-        return [np.subtract(self, expr)]
+        return np.subtract(self, expr)
 
 
 class Model:
@@ -163,10 +163,10 @@ class Model:
         self.int_vars[var_idxs] = integer
         return exprs
 
-    def add_constr(self, constr: List[Expr]):
-        self.cons += constr
+    def add_constr(self, constr: 'ExprNumpy'):
+        self.cons.append(constr)
 
-    def __iadd__(self, other: List[Expr]):
+    def __iadd__(self, other: 'ExprNumpy'):
         self.add_constr(other)
         return self
 
