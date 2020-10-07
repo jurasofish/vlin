@@ -31,15 +31,16 @@ class Expr:
 
     def __le__(self, other: Union['Expr', Real]) -> List['Expr']:
         """ x <= y  =>  x-y <= 0 """
-        return [self - other]
+        raise NotImplementedError
 
     def __ge__(self, other: Union['Expr', Real]) -> List['Expr']:
-        """ x >= y  =>  x-y >= 0  =>  y-x <= 0 """
-        return [other - self]
+        """ Negative of less than or equal. """
+        return [-1.0*x for x in self.__le__(other)]
 
     def __eq__(self, other: Union['Expr', Real]) -> List['Expr']:
         """ x == y  =>  x-y >= 0 AND x-y <= 0 """
-        return (other <= self) + (self <= other)  # List of two linear expressions.
+        con = (other <= self)[0]
+        return [con, -1.0 * con]
 
     def __sub__(self, other: Union['Expr', Real]) -> 'Expr':
         return self.__add__(-1.0 * other)
