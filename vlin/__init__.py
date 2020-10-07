@@ -115,6 +115,17 @@ class ExprNumpy(Expr, np.ndarray):
         """ Implement me """
         return np.multiply(self, np.expand_dims(other, -1))
 
+    def __le__(self, other: Union['Expr', Real]) -> List['Expr']:
+        """ x <= y  =>  x-y <= 0 """
+        if not isinstance(other, Expr):
+            expr = np.zeros(self.shape, dtype=self.dtype)
+            expr[..., 0] = 1  # Last axis
+            other = np.array(other)
+            expr *= np.expand_dims(other, tuple(range(other.ndim, self.ndim)))
+        else:
+            expr = other
+        return [np.subtract(self, expr)]
+
 
 class Model:
 
