@@ -72,34 +72,6 @@ class Expr:
     def __ne__(self, other):
         raise NotImplementedError
 
-    # TODO: yada yada fill out the rest of these...
-
-
-class ExprSCR(Expr, sparse.csr_matrix):
-    """ A vector of linear expressions: Each row is a vector of var coefficients. """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.base_cast = sparse.csr_matrix
-
-    def raw(self) -> sparse.csr_matrix:
-        """ Convert expression to raw sparse matrix. """
-        return self.base_cast(self)
-
-    def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
-        if isinstance(other, (Real, np.ndarray)):
-            expr = self.zeros(self.shape, dtype=self.dtype)
-            expr[:, 0] = 1
-            if isinstance(other, np.ndarray):
-                other = np.expand_dims(other, -1)
-            expr = expr.multiply(other)  # `expr * k` doesn't work ...
-            return super().__add__(expr)
-        return super().__add__(other)
-
-    def __mul__(self, other: Union[Real, np.ndarray]) -> 'Expr':
-        if isinstance(other, np.ndarray):
-            other = np.expand_dims(other, -1)
-        return self.multiply(other)
-
 
 class ExprNumpy(Expr, np.ndarray):
 
