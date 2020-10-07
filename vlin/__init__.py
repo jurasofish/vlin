@@ -182,7 +182,7 @@ def main():
     m += a >= b
     m += a == b
     m += a == d
-    print(m.combine_cons().todense())
+    print(m.combine_cons())
 
     m = Model(max_vars=10)
     x = m.var(3)
