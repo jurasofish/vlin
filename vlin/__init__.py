@@ -111,7 +111,7 @@ class ExprNumpy(Expr, np.ndarray):
     def vstack(cls, tup: Sequence['ExprNumpy']) -> 'ExprNumpy':
         return cls(np.vstack(tup))
 
-    def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
+    def __add__(self, other: Union['ExprNumpy', Real, np.ndarray]) -> 'ExprNumpy':
         """ Implement me """
         if not isinstance(other, Expr):
             expr = np.zeros(self.shape, dtype=self.dtype)
@@ -122,11 +122,11 @@ class ExprNumpy(Expr, np.ndarray):
             expr = other.raw()
         return self.__class__(np.add(self, expr))
 
-    def __mul__(self, other: Union[Real, np.ndarray]) -> 'Expr':
+    def __mul__(self, other: Union[Real, np.ndarray]) -> 'ExprNumpy':
         """ Implement me """
         return np.multiply(self, np.expand_dims(other, -1))
 
-    def __le__(self, other: Union['Expr', Real, float]) -> List['Expr']:
+    def __le__(self, other: Union['ExprNumpy', Real, float]) -> List['ExprNumpy']:
         """ x <= y  =>  x-y <= 0 """
         if not isinstance(other, Expr):
             expr = np.zeros(self.shape, dtype=self.dtype)
