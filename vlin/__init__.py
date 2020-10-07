@@ -107,7 +107,7 @@ class ExprNumpy(Expr, np.ndarray):
     def __add__(self, other: Union['Expr', Real, np.ndarray]) -> 'Expr':
         """ Implement me """
         expr = np.zeros(self.shape, dtype=self.dtype)
-        expr[:, 0] = 1
+        expr[..., 0] = 1  # Last axis
         expr *= np.expand_dims(other, -1)
         return self.__class__(np.add(self, expr))
 
