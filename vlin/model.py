@@ -2,6 +2,8 @@ import numpy as np
 import scipy.sparse as sparse
 from typing import List, Union, Sequence, Optional, Type
 from .expressions import Expr, ExprNumpy
+import vlin
+
 
 __all__ = [
     "Model",
@@ -45,7 +47,11 @@ class Model:
     def combine_cons(self) -> Expr:
         return self.cons[0].vstack(self.cons)
 
-    def solve(self):
+    def solve_scipy(self):
+        if not np.isclose(self.int_vars.sum(), 0):
+            raise vlin.IntegerNotSupported(
+                "scipy linprog does not support integer variables."
+            )
         from scipy.optimize import linprog
 
         cons = self.combine_cons()
