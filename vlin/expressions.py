@@ -114,7 +114,7 @@ class ExprNumpy(Expr, np.ndarray):
         return np.array(self)
 
     def sum(self) -> "ExprNumpy":
-        return self.raw().sum(axis=-2)
+        return self.__class__(self.raw().sum(axis=-2))
 
     @classmethod
     def zeros(
