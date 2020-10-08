@@ -45,7 +45,7 @@ class Model:
         return self
 
     def combine_cons(self) -> Expr:
-        return self.cons[0].vstack(self.cons)
+        return self.expr.vstack(self.cons)
 
     def solve_scipy(self):
         if not np.isclose(self.int_vars.sum(), 0):
