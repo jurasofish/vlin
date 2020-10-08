@@ -4,16 +4,14 @@ from typing import List, Union, Sequence, Optional, Type
 from .expressions import Expr, ExprNumpy
 
 __all__ = [
-    'Model',
+    "Model",
 ]
 
 
 class Model:
-
-    def __init__(self,
-                 max_vars: int = 5,
-                 expr: Expr = ExprNumpy,
-                 dtype: np.dtype = np.float):
+    def __init__(
+        self, max_vars: int = 5, expr: Expr = ExprNumpy, dtype: np.dtype = np.float
+    ):
         self.max_vars: int = max_vars + 1  # One extra for the constant.
         self.next_var_idx: int = 0  # What number variable model is up to.
         self.dtype: np.dtype = dtype
@@ -49,13 +47,14 @@ class Model:
 
     def solve(self):
         from scipy.optimize import linprog
+
         cons = self.combine_cons()
 
         res = linprog(
             c=self.objective[1:],  # Remove constants,
             A_ub=cons[:, 1:],  # All but the constants
             b_ub=cons[:, 0] * -1.0,  # Constants only
-            bounds=(None, None)
+            bounds=(None, None),
         )
         x = np.hstack([[0], res.x])
         return res, x

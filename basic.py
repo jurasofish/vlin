@@ -9,11 +9,13 @@ def main():
 
     # Check sum with constant and with vector.
     assert np.allclose(np.array(a + 2.34)[:, 0], 2.34)
-    assert np.allclose(np.array(a + np.array([2.34, 1.23]))[:, 0], np.array([2.34, 1.23]))
+    assert np.allclose(
+        np.array(a + np.array([2.34, 1.23]))[:, 0], np.array([2.34, 1.23])
+    )
     assert np.allclose(np.array(a + np.array([1.13, 3.01]))[:, 0], [1.13, 3.01])
 
-    print(a*2)
-    print(a*np.array([2, 3]))
+    print(a * 2)
+    print(a * np.array([2, 3]))
 
     print((a + 1) * np.array([2, 3]))
 
@@ -36,5 +38,5 @@ def main():
     print(a.raw() @ x)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
