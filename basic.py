@@ -2,6 +2,24 @@ import numpy as np
 from vlin import Model
 
 
+def knapsack():
+    # https://docs.python-mip.com/en/latest/examples.html
+    m = Model(max_vars=20)
+    p = np.array([10, 13, 18, 31, 7, 15])
+    w = np.array([11, 15, 20, 35, 10, 33])
+    c = 47
+
+    x = m.var(len(w), integer=True)
+    m += x >= 0
+    m += x <= 1
+    m.objective = -1 * (x * p).sum()
+
+    m += (x * w).sum() <= c
+
+    res, sol_x = m.solve_cylp()
+    print(x.raw() @ sol_x)
+
+
 def main():
     m = Model()
     a = m.var(2)
@@ -13,6 +31,8 @@ def main():
         np.array(a + np.array([2.34, 1.23]))[:, 0], np.array([2.34, 1.23])
     )
     assert np.allclose(np.array(a + np.array([1.13, 3.01]))[:, 0], [1.13, 3.01])
+
+    knapsack()
 
     print(a * 2)
     print(a * np.array([2, 3]))
