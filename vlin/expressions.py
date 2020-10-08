@@ -5,6 +5,12 @@ from numbers import Real
 from abc import ABC
 
 
+__all__ = [
+    'Expr',
+    'ExprNumpy',
+]
+
+
 class Expr(ABC):
     """ An array of linear expressions: each expression is a vector of var coefficients. """
 

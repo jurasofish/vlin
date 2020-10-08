@@ -3,6 +3,12 @@ import scipy.sparse as sparse
 from typing import List, Union, Sequence, Optional, Type
 from .expressions import Expr, ExprNumpy
 
+__all__ = [
+    'Model',
+    'Expr',
+    'ExprNumpy',
+]
+
 
 class Model:
 
