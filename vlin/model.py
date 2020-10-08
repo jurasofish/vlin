@@ -74,9 +74,7 @@ class Model:
         n = int(self.next_var_idx - 1)  # Number of variables.
 
         # Maximize c@x s.t. A@x <= b  (variable bounds done by constraints)
-        c = self.objective[
-            1 : n + 1
-        ].raw()  # Objective coefficients, without constants.
+        c = self.objective[1 : n + 1].raw()  # Objective coefficients, no constants.
         A = cons[:, 1 : n + 1].raw()  # Constraint coefficients.
         b = cons[:, 0].raw() * -1.0  # Constraint constants.
 
