@@ -74,12 +74,14 @@ class Model:
         n = int(self.next_var_idx - 1)  # Number of variables.
 
         # Maximize c@x s.t. A@x <= b  (variable bounds done by constraints)
-        c = self.objective[1:n+1].raw()  # Objective coefficients, without constants.
-        A = cons[:, 1:n+1].raw()  # Constraint coefficients.
+        c = self.objective[
+            1 : n + 1
+        ].raw()  # Objective coefficients, without constants.
+        A = cons[:, 1 : n + 1].raw()  # Constraint coefficients.
         b = cons[:, 0].raw() * -1.0  # Constraint constants.
 
         model = CyLPModel()
-        x = model.addVariable('x', n)  # Variables
+        x = model.addVariable("x", n)  # Variables
         model.objective = c
 
         # I hate this so much. Casting A to a matrix causes A.__mul__ to be
@@ -104,15 +106,13 @@ class Model:
             status = model.initialSolve()
             solmodel = model
 
-        sol_x = np.hstack((  # Pad back to original shape
-            [1.0],  # Special constant 1.0 variable.
-            solmodel.primalVariableSolution['x'],  # Actual solution
-            np.zeros(self.max_vars - n - 1)  # Unused vars
-        ))
+        sol_x = np.hstack(  # Pad back to original shape
+            (
+                [1.0],  # Special constant 1.0 variable.
+                solmodel.primalVariableSolution["x"],  # Actual solution
+                np.zeros(self.max_vars - n - 1),  # Unused vars
+            )
+        )
 
-        solution = {
-            "status": status,
-            "primal": sol_x,
-            "value": solmodel.objectiveValue
-        }
+        solution = {"status": status, "primal": sol_x, "value": solmodel.objectiveValue}
         return solution, solution["primal"]
