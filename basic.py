@@ -27,7 +27,7 @@ def main():
     print(m.combine_cons())
 
     m = Model(max_vars=4)
-    a = m.var(3)
+    a = m.var(3, integer=np.array([False, True, False]))
     m += a <= np.array([1, 2, 3])
     m += a >= 0
     # m += a[1] + a[2] <= 2

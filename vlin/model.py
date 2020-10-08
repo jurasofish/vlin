@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.sparse as sparse
-from typing import List, Union, Sequence, Optional, Type
+from typing import List, Union, Sequence, Optional, Type, Iterable
 from .expressions import Expr, ExprNumpy
 import vlin
 
@@ -27,7 +27,7 @@ class Model:
 
         self.objective: Optional[Expr] = None
 
-    def var(self, n=1, integer: bool = False) -> Expr:
+    def var(self, n=1, integer: Union[bool, Iterable[bool]] = False) -> Expr:
         """ Return linear expressions representing new variables. """
         start_idx = self.next_var_idx
         self.next_var_idx += n
