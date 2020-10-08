@@ -1,10 +1,11 @@
 import numpy as np
 import scipy.sparse as sparse
-from typing import List, Union, Sequence, Optional
+from typing import List, Union, Sequence, Optional, Type
 from numbers import Real
+from abc import ABC
 
 
-class Expr:
+class Expr(ABC):
     """ An array of linear expressions: each expression is a vector of var coefficients. """
 
     def raw(self):
@@ -16,7 +17,7 @@ class Expr:
         raise NotImplementedError
 
     @classmethod
-    def zeros(self, shape: int, max_vars: int, dtype=np.float64) -> 'Expr':
+    def zeros(self, shape: int, max_vars: int, dtype: np.dtype = np.float64) -> 'Expr':
         """ Return vector instance of self all zeros. """
         raise NotImplementedError
 
@@ -82,6 +83,12 @@ class Expr:
     def __ne__(self, other):
         raise NotImplementedError
 
+    def __getitem__(self, key):
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, value):
+        return super().__setitem__(key, value)
+
 
 class ExprNumpy(Expr, np.ndarray):
 
@@ -104,7 +111,7 @@ class ExprNumpy(Expr, np.ndarray):
         return self.raw().sum(axis=-2)
 
     @classmethod
-    def zeros(cls, shape: int, max_vars: int, dtype=np.float64) -> 'ExprNumpy':
+    def zeros(cls, shape: int, max_vars: int, dtype: np.dtype = np.float64) -> 'ExprNumpy':
         return cls(np.zeros((shape, max_vars), dtype=dtype))
 
     @classmethod
@@ -112,7 +119,6 @@ class ExprNumpy(Expr, np.ndarray):
         return cls(np.vstack(tup))
 
     def __add__(self, other: Union['ExprNumpy', Real, np.ndarray]) -> 'ExprNumpy':
-        """ Implement me """
         if not isinstance(other, Expr):
             expr = np.zeros(self.shape, dtype=self.dtype)
             expr[..., 0] = 1  # Last axis
@@ -123,7 +129,6 @@ class ExprNumpy(Expr, np.ndarray):
         return self.__class__(np.add(self, expr))
 
     def __mul__(self, other: Union[Real, np.ndarray]) -> 'ExprNumpy':
-        """ Implement me """
         return np.multiply(self, np.expand_dims(other, -1))
 
     def __le__(self, other: Union['ExprNumpy', Real, float]) -> 'ExprNumpy':
@@ -140,10 +145,13 @@ class ExprNumpy(Expr, np.ndarray):
 
 class Model:
 
-    def __init__(self, max_vars: int = 5):
+    def __init__(self, max_vars: int = 5,
+                 expr: Expr = ExprNumpy,
+                 dtype: np.dtype = np.float):
         self.max_vars: int = max_vars + 1  # One extra for the constant.
         self.next_var_idx: int = 0  # What number variable model is up to.
-        self.dtype = np.float64
+        self.dtype = dtype
+        self.expr = expr
         self.int_vars = np.zeros(max_vars, dtype=np.bool)  # True where var is int
 
         # Constraints are represented as linear expressions which must be <= 0
@@ -157,16 +165,16 @@ class Model:
         """ Return linear expressions representing new variables. """
         start_idx = self.next_var_idx
         self.next_var_idx += n
-        exprs = ExprNumpy.zeros(n, self.max_vars, dtype=self.dtype)
+        exprs = self.expr.zeros(n, self.max_vars, dtype=self.dtype)
         var_idxs = np.arange(n)
         exprs[var_idxs, start_idx + var_idxs] = 1.0
         self.int_vars[var_idxs] = integer
         return exprs
 
-    def add_constr(self, constr: 'ExprNumpy'):
+    def add_constr(self, constr: 'Expr'):
         self.cons.append(constr)
 
-    def __iadd__(self, other: 'ExprNumpy'):
+    def __iadd__(self, other: 'Expr'):
         self.add_constr(other)
         return self
 
