@@ -33,7 +33,7 @@ def main():
     # m += a[1] + a[2] <= 2
     # m += a[0] + a[1] <= 1
     m.objective = -1 * a.sum()  # Maximise sum of them.
-    res, x = m.solve_scipy()
+    res, x = m.solve_cylp()
     print(x)
     print(a.raw() @ x)
 
