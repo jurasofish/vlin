@@ -1,9 +1,11 @@
 import vlin
 import numpy as np
+import pytest
 
 
-def test_trivial_fully_linear():
-    m = vlin.Model(max_vars=4)
+@pytest.mark.parametrize("expr", vlin.expressions)
+def test_trivial_fully_linear(expr):
+    m = vlin.Model(expr=expr, max_vars=4)
     a = m.var(3)
     m += a <= np.array([1.1, 2.3, 3.3])
     m += a >= 0
@@ -12,8 +14,9 @@ def test_trivial_fully_linear():
     assert np.allclose(a.raw() @ x, np.array([1.1, 2.3, 3.3]))
 
 
-def test_trivial_milp():
-    m = vlin.Model(max_vars=4)
+@pytest.mark.parametrize("expr", vlin.expressions)
+def test_trivial_milp(expr):
+    m = vlin.Model(expr=expr, max_vars=4)
     a = m.var(3, integer=np.array([False, True, False]))
     m += a <= np.array([1.1, 2.3, 3.3])
     m += a >= 0

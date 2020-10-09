@@ -1,10 +1,12 @@
 import vlin
 import numpy as np
+import pytest
 
 
-def test_knapsack():
+@pytest.mark.parametrize("expr", vlin.expressions)
+def test_knapsack(expr):
     # https://docs.python-mip.com/en/latest/examples.html
-    m = vlin.Model(max_vars=20)
+    m = vlin.Model(expr=expr, max_vars=20)
     p = np.array([10, 13, 18, 31, 7, 15])
     w = np.array([11, 15, 20, 35, 10, 33])
     c = 47
