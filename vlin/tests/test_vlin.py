@@ -88,23 +88,24 @@ def test_multiplication_of_var_and_constant(expr):
     a = m.var(2)
 
     v = (a * 2.34)
-    assert v.shape == a.raw().shape
-    assert np.allclose(v.raw().sum(axis=1), 2.34)
-    assert isinstance(v, vlin.Expr)
+    assert v.shape == a.shape
+    assert np.allclose(v.rawdense().sum(axis=1), 2.34)
+    assert isinstance(v, expr)
 
     v = (a * np.array([2.34]))
-    assert v.shape == a.raw().shape
-    assert np.allclose(v.raw().sum(axis=1), 2.34)
-    assert isinstance(v, vlin.Expr)
+    assert v.shape == a.shape
+    assert np.allclose(v.rawdense().sum(axis=1), 2.34)
+    assert isinstance(v, expr)
 
     v = (a * np.array([2.34, 1.23]))
-    assert v.shape == a.raw().shape
-    assert np.allclose(v.raw().sum(axis=1), [2.34, 1.23])
-    assert isinstance(v, vlin.Expr)
+    assert v.shape == a.shape
+    assert np.allclose(v.rawdense().sum(axis=1), [2.34, 1.23])
+    assert isinstance(v, expr)
 
     with pytest.raises(ValueError) as execinfo:
         a * np.array([1, 2, 3])
-    assert 'operands could not be broadcast together' in str(execinfo)
+    assert ('operands could not be broadcast together' in str(execinfo)
+            or 'inconsistent shapes' in str(execinfo))
 
     with pytest.raises(NotImplementedError):
         a *= 1

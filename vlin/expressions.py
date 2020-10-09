@@ -209,12 +209,12 @@ class ExprCSR(Expr, sparse.csr_matrix):
         a[:, 0] = np.expand_dims(k, -1)
         return self.__class__(a)
 
-    def __mul__(self, other: Union[Real, np.ndarray]) -> "ExprNumpy":
+    def __mul__(self, other: Union[Real, np.ndarray]) -> "ExprCSR":
         try:
             return self.multiply(other)
         except ValueError:
             # Exception rarely hit, so is faster than instance/dimension check.
-            return np.multiply(self, np.expand_dims(other, -1))
+            return self.__class__(self.multiply(np.expand_dims(other, -1)))
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {super().__repr__()[1:]}'
