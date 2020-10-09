@@ -42,9 +42,9 @@ class Expr(ABC):
         """ Implement me """
         raise NotImplementedError
 
-    def __le__(self, other: Union["Expr", Real]) -> "Expr":
+    def __le__(self, other: Union["Expr", Real, float, np.ndarray]) -> "Expr":
         """ x <= y  =>  x-y <= 0 """
-        raise NotImplementedError
+        return self - other
 
     def __ge__(self, other: Union["Expr", Real]) -> "Expr":
         """ Negative of less than or equal. """
@@ -150,10 +150,6 @@ class ExprNumpy(Expr, np.ndarray):
         except ValueError:
             # Exception rarely hit, so is faster than instance/dimension check.
             return np.multiply(self, np.expand_dims(other, -1))
-
-    def __le__(self, other: Union["ExprNumpy", Real, float]) -> "ExprNumpy":
-        """ x <= y  =>  x-y <= 0 """
-        return self.__add__(-1.0 * other)
 
     def __getitem__(self, key):
         """ Force result to be 2D. """
