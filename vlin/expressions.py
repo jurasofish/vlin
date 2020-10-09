@@ -8,6 +8,7 @@ from abc import ABC
 __all__ = [
     "Expr",
     "ExprNumpy",
+    "ExprCSR",
 ]
 
 
@@ -18,6 +19,10 @@ class Expr(ABC):
 
     def raw(self):
         """ Convert expression to its raw underlying data type. """
+        raise NotImplementedError
+
+    def rawdense(self) -> np.ndarray:
+        """ Convert expression to np.ndarray """
         raise NotImplementedError
 
     def sum(self) -> "Expr":
@@ -115,6 +120,10 @@ class ExprNumpy(Expr, np.ndarray):
         """ Convert expression to numpy array """
         return np.asarray(self).view(np.ndarray).copy()
 
+    def rawdense(self) -> np.ndarray:
+        """ Convert expression to np.ndarray """
+        return self.raw()
+
     def sum(self) -> "ExprNumpy":
         x = np.asarray(self).view(np.ndarray)
         x = x.sum(axis=0)
@@ -154,3 +163,49 @@ class ExprNumpy(Expr, np.ndarray):
     def __getitem__(self, key):
         """ Force result to be 2D. """
         return np.atleast_2d(super().__getitem__(key))
+
+
+class ExprCSR(Expr, sparse.csr_matrix):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def raw(self) -> sparse.csr_matrix:
+        """ Convert expression to numpy array """
+        return sparse.csr_matrix(self)
+
+    def rawdense(self) -> np.ndarray:
+        """ Convert expression to np.ndarray """
+        return self.raw().toarray()
+
+    def sum(self) -> "ExprCSR":
+        return self.__class__(sparse.csr_matrix.sum(self.raw(), axis=0))
+
+    @classmethod
+    def zeros(
+        cls, shape: int, max_vars: int, dtype: np.dtype = np.float64
+    ) -> "ExprCSR":
+        return cls(sparse.csr_matrix((shape, max_vars), dtype=dtype))
+
+    @classmethod
+    def vstack(cls, tup: Sequence["ExprCSR"]) -> "ExprCSR":
+        return cls(sparse.vstack(tup))
+
+    def __add__(self, other: Union["ExprCSR", Real, np.ndarray]) -> "ExprCSR":
+        if isinstance(other, Expr):
+            return self.__class__(self.raw() + other.raw())
+
+        a = self.raw()
+        k = np.ones(self.shape[0]) * other + a[:, 0].toarray()[:, 0]
+        a[:, 0] = np.expand_dims(k, -1)
+        return self.__class__(a)
+
+    def __mul__(self, other: Union[Real, np.ndarray]) -> "ExprNumpy":
+        try:
+            return self.multiply(other)
+        except ValueError:
+            # Exception rarely hit, so is faster than instance/dimension check.
+            return np.multiply(self, np.expand_dims(other, -1))
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}: {super().__repr__()[1:]}'

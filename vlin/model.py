@@ -70,13 +70,13 @@ class Model:
         from cylp.cy import CyClpSimplex
         from cylp.py.modeling.CyLPModel import CyLPModel, CyLPArray
 
-        cons = self.combine_cons().raw()
+        cons = self.combine_cons()
         n = int(self.next_var_idx - 1)  # Number of variables.
 
         # Maximize c@x s.t. A@x <= b  (variable bounds done by constraints)
-        c = self.objective.raw().squeeze()[1 : n + 1]  # Objective coefficients, no constants.
-        A = cons[:, 1 : n + 1]  # Constraint coefficients.
-        b = cons[:, 0] * -1.0  # Constraint constants.
+        c = self.objective.rawdense().squeeze()[1 : n + 1]  # Objective coefficients, no constants.
+        A = cons.raw()[:, 1 : n + 1]  # Constraint coefficients.
+        b = cons[:, 0].rawdense().squeeze() * -1.0  # Constraint constants.
 
         model = CyLPModel()
         x = model.addVariable("x", n)  # Variables
