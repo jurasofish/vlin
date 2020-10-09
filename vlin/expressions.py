@@ -129,14 +129,17 @@ class ExprNumpy(Expr, np.ndarray):
         return cls(np.vstack(tup))
 
     def __add__(self, other: Union["ExprNumpy", Real, np.ndarray]) -> "ExprNumpy":
-        if not isinstance(other, Expr):
-            expr = np.zeros(self.shape, dtype=self.dtype)
-            expr[..., 0] = 1  # Last axis
-            other = np.array(other)
-            expr *= np.expand_dims(other, tuple(range(other.ndim, self.ndim)))
-        else:
-            expr = other
-        return self.__class__(np.add(self, expr))
+        if isinstance(other, Expr):
+            return self.__class__(np.add(self, other))
+
+        # Mutate self in-place
+        # TODO: use this for __iadd__
+        # a = np.asarray(self).view(np.ndarray)
+        # a[:, 0] += other
+
+        a = self.raw()
+        a[:, 0] += other
+        return self.__class__(a)
 
     def __mul__(self, other: Union[Real, np.ndarray]) -> "ExprNumpy":
         try:
