@@ -28,6 +28,20 @@ def test_addition_of_var_and_constant():
         a += 1
 
 
+def test_addition_of_var_and_var():
+
+    m = vlin.Model(max_vars=7)
+    a = m.var(2)
+    b = m.var(2)
+    c = m.var(3)
+
+    assert np.allclose((a + b).raw(), a.raw() + b.raw())
+
+    with pytest.raises(ValueError) as execinfo:
+        a + c
+    assert 'operands could not be broadcast together' in str(execinfo)
+
+
 def test_multiplication_of_var_and_constant():
 
     m = vlin.Model()
