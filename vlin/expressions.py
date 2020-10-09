@@ -153,14 +153,7 @@ class ExprNumpy(Expr, np.ndarray):
 
     def __le__(self, other: Union["ExprNumpy", Real, float]) -> "ExprNumpy":
         """ x <= y  =>  x-y <= 0 """
-        if not isinstance(other, Expr):
-            expr = np.zeros(self.shape, dtype=self.dtype)
-            expr[..., 0] = 1  # Last axis
-            other = np.array(other)
-            expr *= np.expand_dims(other, tuple(range(other.ndim, self.ndim)))
-        else:
-            expr = other.raw()
-        return np.subtract(self, expr)
+        return self.__add__(-1.0 * other)
 
     def __getitem__(self, key):
         """ Force result to be 2D. """
