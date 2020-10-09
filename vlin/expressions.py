@@ -111,7 +111,7 @@ class ExprNumpy(Expr, np.ndarray):
 
     def raw(self) -> np.ndarray:
         """ Convert expression to numpy array """
-        return np.array(self)
+        return np.asarray(self).view(np.ndarray)
 
     def sum(self) -> "ExprNumpy":
         return self.__class__(self.raw().sum(axis=-2))
