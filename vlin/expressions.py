@@ -193,7 +193,16 @@ class ExprCSR(Expr, sparse.csr_matrix):
 
     def __add__(self, other: Union["ExprCSR", Real, np.ndarray]) -> "ExprCSR":
         if isinstance(other, Expr):
-            return self.__class__(self.raw() + other.raw())
+            # use vstack to broadcast shapes (I'm sorry)
+            if self.shape == other.shape:
+                return self.__class__(self.raw() + other.raw())
+            elif other.shape[0] == 1:
+                a, b = self, other
+            elif self.shape[0] == 1:
+                a, b = other, self
+            else:
+                raise ValueError(f'inconsistent shapes: {self.shape}, {other.shape}')
+            return self.__class__(a.raw() + b.vstack([b]*a.shape[0]).raw())
 
         a = self.raw()
         k = np.ones(self.shape[0]) * other + a[:, 0].toarray()[:, 0]
