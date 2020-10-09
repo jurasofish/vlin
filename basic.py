@@ -18,6 +18,7 @@ def knapsack():
 
     res, sol_x = m.solve_cylp()
     print(x.raw() @ sol_x)
+    assert np.isclose(-41, res['value'])
 
 
 def main():
