@@ -8,17 +8,20 @@ def test_addition_of_var_and_constant():
     m = vlin.Model()
     a = m.var(2)
 
-    v = (a + 2.34).raw()
+    v = (a + 2.34)
     assert v.shape == a.raw().shape
-    assert np.allclose(v[:, 0], 2.34)
+    assert np.allclose(v.raw()[:, 0], 2.34)
+    assert isinstance(v, vlin.Expr)
 
-    v = (a + np.array([2.34])).raw()
+    v = (a + np.array([2.34]))
     assert v.shape == a.raw().shape
-    assert np.allclose(v[:, 0], 2.34)
+    assert np.allclose(v.raw()[:, 0], 2.34)
+    assert isinstance(v, vlin.Expr)
 
-    v = (a + np.array([2.34, 1.23])).raw()
+    v = (a + np.array([2.34, 1.23]))
     assert v.shape == a.raw().shape
-    assert np.allclose(v[:, 0], [2.34, 1.23])
+    assert np.allclose(v.raw()[:, 0], [2.34, 1.23])
+    assert isinstance(v, vlin.Expr)
 
     with pytest.raises(ValueError) as execinfo:
         a + np.array([1, 2, 3])
@@ -47,17 +50,20 @@ def test_multiplication_of_var_and_constant():
     m = vlin.Model()
     a = m.var(2)
 
-    v = (a * 2.34).raw()
+    v = (a * 2.34)
     assert v.shape == a.raw().shape
-    assert np.allclose(v.sum(axis=1), 2.34)
+    assert np.allclose(v.raw().sum(axis=1), 2.34)
+    assert isinstance(v, vlin.Expr)
 
-    v = (a * np.array([2.34])).raw()
+    v = (a * np.array([2.34]))
     assert v.shape == a.raw().shape
-    assert np.allclose(v.sum(axis=1), 2.34)
+    assert np.allclose(v.raw().sum(axis=1), 2.34)
+    assert isinstance(v, vlin.Expr)
 
-    v = (a * np.array([2.34, 1.23])).raw()
+    v = (a * np.array([2.34, 1.23]))
     assert v.shape == a.raw().shape
-    assert np.allclose(v.sum(axis=1), [2.34, 1.23])
+    assert np.allclose(v.raw().sum(axis=1), [2.34, 1.23])
+    assert isinstance(v, vlin.Expr)
 
     with pytest.raises(ValueError) as execinfo:
         a * np.array([1, 2, 3])
