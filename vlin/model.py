@@ -12,7 +12,7 @@ __all__ = [
 
 class Model:
     def __init__(
-        self, max_vars: int = 5, expr: Expr = ExprNumpy, dtype: np.dtype = np.float
+        self, max_vars: int = 5, expr: Expr = ExprNumpy, dtype: np.dtype = np.float64
     ):
         self.max_vars: int = max_vars + 1  # One extra for the constant.
         self.next_var_idx: int = 0  # What number variable model is up to.
