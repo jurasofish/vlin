@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.sparse as sparse
-from typing import List, Union, Sequence, Optional, Type
+from typing import List, Union, Sequence, Optional, Type, Tuple
 from numbers import Real
 from abc import ABC
 
@@ -13,6 +13,8 @@ __all__ = [
 
 class Expr(ABC):
     """ An array of linear expressions: each expression is a vector of var coefficients. """
+
+    shape: Tuple
 
     def raw(self):
         """ Convert expression to its raw underlying data type. """
