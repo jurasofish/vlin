@@ -135,7 +135,7 @@ class ExprNumpy(Expr, np.ndarray):
             other = np.array(other)
             expr *= np.expand_dims(other, tuple(range(other.ndim, self.ndim)))
         else:
-            expr = other.raw()
+            expr = other
         return self.__class__(np.add(self, expr))
 
     def __mul__(self, other: Union[Real, np.ndarray]) -> "ExprNumpy":
@@ -155,3 +155,7 @@ class ExprNumpy(Expr, np.ndarray):
         else:
             expr = other.raw()
         return np.subtract(self, expr)
+
+    def __getitem__(self, key):
+        """ Force result to be 2D. """
+        return np.atleast_2d(super().__getitem__(key))
