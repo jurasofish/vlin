@@ -137,7 +137,11 @@ class ExprNumpy(Expr, np.ndarray):
         return self.__class__(np.add(self, expr))
 
     def __mul__(self, other: Union[Real, np.ndarray]) -> "ExprNumpy":
-        return np.multiply(self, np.expand_dims(other, -1))
+        try:
+            return np.multiply(self, other)
+        except ValueError:
+            # Exception rarely hit, so is faster than instance/dimension check.
+            return np.multiply(self, np.expand_dims(other, -1))
 
     def __le__(self, other: Union["ExprNumpy", Real, float]) -> "ExprNumpy":
         """ x <= y  =>  x-y <= 0 """
