@@ -26,12 +26,31 @@ def main():
     a = m.var(2)
     b = m.var(2)
 
-    # Check sum with constant and with vector.
-    assert np.allclose(np.array(a + 2.34)[:, 0], 2.34)
-    assert np.allclose(
-        np.array(a + np.array([2.34, 1.23]))[:, 0], np.array([2.34, 1.23])
-    )
-    assert np.allclose(np.array(a + np.array([1.13, 3.01]))[:, 0], [1.13, 3.01])
+    # Check sum with constant and vector.
+    v = (a + 2.34).raw()
+    assert v.shape == a.raw().shape
+    assert np.allclose(v[:, 0], 2.34)
+
+    v = (a + np.array([2.34])).raw()
+    assert v.shape == a.raw().shape
+    assert np.allclose(v[:, 0], 2.34)
+
+    v = (a + np.array([2.34, 1.23])).raw()
+    assert v.shape == a.raw().shape
+    assert np.allclose(v[:, 0], [2.34, 1.23])
+
+    # Check multiply wth constant and vector
+    v = (a * 2.34).raw()
+    assert v.shape == a.raw().shape
+    assert np.allclose(v.sum(axis=1), 2.34)
+
+    v = (a * np.array([2.34])).raw()
+    assert v.shape == a.raw().shape
+    assert np.allclose(v.sum(axis=1), 2.34)
+
+    v = (a * np.array([2.34, 1.23])).raw()
+    assert v.shape == a.raw().shape
+    assert np.allclose(v.sum(axis=1), [2.34, 1.23])
 
     knapsack()
 
