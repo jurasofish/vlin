@@ -42,7 +42,7 @@ def test_slicing_shape():
     m = vlin.Model()
     a = m.var(4)
     assert a[1:3].shape == (2, m.max_vars)
-    assert a[1].shape == (1, m.max_vars)  # TODO: FIX. should return a 2D array.
+    assert a[1].shape == (1, m.max_vars)
 
 
 def test_addition_of_var_and_var():
