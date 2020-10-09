@@ -116,7 +116,10 @@ class ExprNumpy(Expr, np.ndarray):
         return np.asarray(self).view(np.ndarray).copy()
 
     def sum(self) -> "ExprNumpy":
-        return self.__class__(self.raw().sum(axis=-2))
+        x = np.asarray(self).view(np.ndarray)
+        x = x.sum(axis=0)
+        x = np.atleast_2d(x)
+        return self.__class__(x)
 
     @classmethod
     def zeros(

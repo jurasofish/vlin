@@ -45,6 +45,22 @@ def test_slicing_shape():
     assert a[1].shape == (1, m.max_vars)
 
 
+def test_sum():
+    m = vlin.Model(max_vars=4)
+    a = m.var(1)
+    b = m.var(3)
+
+    assert np.allclose(a.sum().raw(), [[0, 1, 0, 0, 0]])
+
+    # Broadcasting~~
+    # This is like [0, 1, 2] + 1 => [1, 2, 3]
+    # and then summed: [1, 2, 3].sum() = 6 == [0, 1, 2].sum() * 1*len([0, 1, 2])
+    assert np.allclose((a+b).sum().raw(), [[0, 3, 1, 1, 1]])
+
+    assert a.sum().shape == (1, m.max_vars)
+    assert b.sum().shape == (1, m.max_vars)
+
+
 def test_addition_of_var_and_var():
 
     m = vlin.Model(max_vars=7)
