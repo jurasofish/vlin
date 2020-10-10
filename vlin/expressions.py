@@ -204,7 +204,7 @@ class ExprCSR(Expr, sparse.csr_matrix):
                 raise ValueError(f'inconsistent shapes: {self.shape}, {other.shape}')
             return self.__class__(a.raw() + b.vstack([b]*a.shape[0]).raw())
 
-        a = self.raw()
+        a = self.raw().copy()
         k = np.ones(self.shape[0]) * other + a[:, 0].toarray()[:, 0]
         a[:, 0] = np.expand_dims(k, -1)
         return self.__class__(a)
