@@ -68,12 +68,14 @@ def test_sum(expr):
 @pytest.mark.parametrize("expr", vlin.expressions)
 def test_addition_of_var_and_var(expr):
 
-    m = vlin.Model(expr=expr, max_vars=7)
+    m = vlin.Model(expr=expr, max_vars=8)
     a = m.var(2)
     b = m.var(2)
     c = m.var(3)
+    d = m.var(1)
 
     assert np.allclose((a + b).rawdense(), a.rawdense() + b.rawdense())
+    assert np.allclose((a + d).rawdense(), a.rawdense() + d.rawdense())
 
     with pytest.raises(ValueError) as execinfo:
         a + c
