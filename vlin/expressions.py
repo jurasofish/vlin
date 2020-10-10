@@ -210,11 +210,10 @@ class ExprCSC(Expr, sparse.csc_matrix):
         return self.__class__(a)
 
     def __mul__(self, other: Union[Real, np.ndarray]) -> "ExprCSC":
-        try:
-            return self.__class__(self.multiply(other))
-        except ValueError:
-            # Exception rarely hit, so is faster than instance/dimension check.
-            return self.__class__(self.multiply(np.expand_dims(other, -1)))
+        k = np.array(other)
+        if np.ndim(k) > 0 and k.shape[0] > 1:
+            other = np.expand_dims(k, -1)
+        return self.__class__(self.multiply(other))
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {super().__repr__()[1:]}'
