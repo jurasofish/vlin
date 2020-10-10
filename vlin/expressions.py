@@ -8,7 +8,7 @@ from abc import ABC
 __all__ = [
     "Expr",
     "ExprNumpy",
-    "ExprCSR",
+    "ExprCSC",
 ]
 
 
@@ -165,33 +165,33 @@ class ExprNumpy(Expr, np.ndarray):
         return np.atleast_2d(super().__getitem__(key))
 
 
-class ExprCSR(Expr, sparse.csr_matrix):
+class ExprCSC(Expr, sparse.csc_matrix):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def raw(self) -> sparse.csr_matrix:
+    def raw(self) -> sparse.csc_matrix:
         """ Convert expression to numpy array """
-        return sparse.csr_matrix(self)
+        return sparse.csc_matrix(self)
 
     def rawdense(self) -> np.ndarray:
         """ Convert expression to np.ndarray """
         return self.raw().toarray()
 
-    def sum(self) -> "ExprCSR":
-        return self.__class__(sparse.csr_matrix.sum(self.raw(), axis=0))
+    def sum(self) -> "ExprCSC":
+        return self.__class__(sparse.csc_matrix.sum(self.raw(), axis=0))
 
     @classmethod
     def zeros(
         cls, shape: int, max_vars: int, dtype: np.dtype = np.float64
-    ) -> "ExprCSR":
-        return cls(sparse.csr_matrix((shape, max_vars), dtype=dtype))
+    ) -> "ExprCSC":
+        return cls(sparse.csc_matrix((shape, max_vars), dtype=dtype))
 
     @classmethod
-    def vstack(cls, tup: Sequence["ExprCSR"]) -> "ExprCSR":
+    def vstack(cls, tup: Sequence["ExprCSC"]) -> "ExprCSC":
         return cls(sparse.vstack(tup))
 
-    def __add__(self, other: Union["ExprCSR", Real, np.ndarray]) -> "ExprCSR":
+    def __add__(self, other: Union["ExprCSC", Real, np.ndarray]) -> "ExprCSC":
         if isinstance(other, Expr):
             # use vstack to broadcast shapes (I'm sorry)
             if self.shape == other.shape:
@@ -209,12 +209,16 @@ class ExprCSR(Expr, sparse.csr_matrix):
         a[:, 0] = np.expand_dims(k, -1)
         return self.__class__(a)
 
-    def __mul__(self, other: Union[Real, np.ndarray]) -> "ExprCSR":
+    def __mul__(self, other: Union[Real, np.ndarray]) -> "ExprCSC":
         try:
-            return self.multiply(other)
+            return self.__class__(self.multiply(other))
         except ValueError:
             # Exception rarely hit, so is faster than instance/dimension check.
             return self.__class__(self.multiply(np.expand_dims(other, -1)))
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {super().__repr__()[1:]}'
+
+    def __getitem__(self, key):
+        """ Force result to be 2D. """
+        return self.__class__(super().__getitem__(key))

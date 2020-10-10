@@ -3,4 +3,4 @@ from .expressions import *
 from .exceptions import *
 
 
-expressions = (ExprCSR, ExprNumpy)
+expressions = (ExprCSC, ExprNumpy)
