@@ -204,10 +204,11 @@ class ExprCSC(Expr, sparse.csc_matrix):
                 raise ValueError(f'inconsistent shapes: {self.shape}, {other.shape}')
             return self.__class__(a.raw() + b.vstack([b]*a.shape[0]).raw())
 
-        a = self.raw().copy()
-        k = np.ones(self.shape[0]) * other + a[:, 0].toarray()[:, 0]
-        a[:, 0] = np.expand_dims(k, -1)
-        return self.__class__(a)
+        data = np.ones(self.shape[0]) * other
+        rows = np.arange(self.shape[0], dtype=np.int32)
+        cols = np.zeros(self.shape[0], np.int32)
+        a = sparse.csc_matrix((data, (rows, cols)), shape=self.shape)
+        return self.__class__(self.raw() + a)
 
     def __mul__(self, other: Union[Real, np.ndarray]) -> "ExprCSC":
         k = np.array(other)
