@@ -75,7 +75,10 @@ def test_addition_of_var_and_var(expr):
     d = m.var(1)
 
     assert np.allclose((a + b).rawdense(), a.rawdense() + b.rawdense())
+
+    # Force broadcasting.
     assert np.allclose((a + d).rawdense(), a.rawdense() + d.rawdense())
+    assert np.allclose((d + a).rawdense(), a.rawdense() + d.rawdense())
 
     with pytest.raises(ValueError) as execinfo:
         a + c
