@@ -51,6 +51,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install coinor-cbc
         dpkg -L coinor-cbc
+        sudo apt-get install coin-or-libcbc-dev
+        dpkg -L coin-or-libcbc-dev
 
     - name: Install dependencies
       run: |
