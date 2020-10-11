@@ -1,8 +1,8 @@
-# vLin: Vectorised Linear Modelling
+# vLin: Vectorised Linear Integer Modelling
 
 This package is an experiment to try to vectorise (a la numpy) the process 
-of constructing linear models. It works, but is **marginally slower than 
-[python-mip](https://github.com/coin-or/python-mip)**
+of constructing mixed integer linear models. It works, but is
+**marginally slower than [python-mip](https://github.com/coin-or/python-mip)**
 for problems with ~300 variables and ~1000 constraints.
 
 ### Goal
