@@ -3,9 +3,9 @@ import setuptools
 
 setuptools.setup(
     name="vlin",
-    version="0.0.0",
+    version="0.0.1",
     packages=setuptools.find_packages(),
-    install_requires=["cylp", "numpy"],
+    install_requires=["numpy", "scipy"],
     python_requires=">=3.7",
     include_package_data=True,
     setup_requires=[],
