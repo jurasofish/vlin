@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.parametrize("expr", vlin.expressions)
-@pytest.mark.parametrize("solver", ['cylp'])
+@pytest.mark.parametrize("solver", ["cylp"])
 def test_knapsack(expr, solver):
     # https://docs.python-mip.com/en/latest/examples.html
     m = vlin.Model(expr=expr, max_vars=20)

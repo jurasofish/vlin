@@ -9,24 +9,24 @@ def test_addition_of_var_and_constant(expr):
     m = vlin.Model(expr=expr)
     a = m.var(2)
 
-    v = (a + 2.34)
+    v = a + 2.34
     assert v.shape == a.shape
     assert np.allclose(v.rawdense()[:, 0], 2.34)
     assert isinstance(v, expr)
 
-    v = (a + np.array([2.34]))
+    v = a + np.array([2.34])
     assert v.shape == a.shape
     assert np.allclose(v.rawdense()[:, 0], 2.34)
     assert isinstance(v, expr)
 
-    v = (a + np.array([2.34, 1.23]))
+    v = a + np.array([2.34, 1.23])
     assert v.shape == a.shape
     assert np.allclose(v.rawdense()[:, 0], [2.34, 1.23])
     assert isinstance(v, expr)
 
     with pytest.raises(ValueError) as execinfo:
         a + np.array([1, 2, 3])
-    assert 'operands could not be broadcast together' in str(execinfo)
+    assert "operands could not be broadcast together" in str(execinfo)
 
     with pytest.raises(NotImplementedError):
         a += 1
@@ -59,7 +59,7 @@ def test_sum(expr):
     # Broadcasting~~
     # This is like [0, 1, 2] + 1 => [1, 2, 3]
     # and then summed: [1, 2, 3].sum() = 6 == [0, 1, 2].sum() * 1*len([0, 1, 2])
-    assert np.allclose((a+b).sum().rawdense(), [[0, 3, 1, 1, 1]])
+    assert np.allclose((a + b).sum().rawdense(), [[0, 3, 1, 1, 1]])
 
     assert a.sum().shape == (1, m.max_vars)
     assert b.sum().shape == (1, m.max_vars)
@@ -82,8 +82,9 @@ def test_addition_of_var_and_var(expr):
 
     with pytest.raises(ValueError) as execinfo:
         a + c
-    assert ('operands could not be broadcast together' in str(execinfo)
-            or 'inconsistent shapes' in str(execinfo))
+    assert "operands could not be broadcast together" in str(
+        execinfo
+    ) or "inconsistent shapes" in str(execinfo)
 
 
 @pytest.mark.parametrize("expr", vlin.expressions)
@@ -92,25 +93,26 @@ def test_multiplication_of_var_and_constant(expr):
     m = vlin.Model(expr=expr)
     a = m.var(2)
 
-    v = (a * 2.34)
+    v = a * 2.34
     assert v.shape == a.shape
     assert np.allclose(v.rawdense().sum(axis=1), 2.34)
     assert isinstance(v, expr)
 
-    v = (a * np.array([2.34]))
+    v = a * np.array([2.34])
     assert v.shape == a.shape
     assert np.allclose(v.rawdense().sum(axis=1), 2.34)
     assert isinstance(v, expr)
 
-    v = (a * np.array([2.34, 1.23]))
+    v = a * np.array([2.34, 1.23])
     assert v.shape == a.shape
     assert np.allclose(v.rawdense().sum(axis=1), [2.34, 1.23])
     assert isinstance(v, expr)
 
     with pytest.raises(ValueError) as execinfo:
         a * np.array([1, 2, 3])
-    assert ('operands could not be broadcast together' in str(execinfo)
-            or 'inconsistent shapes' in str(execinfo))
+    assert "operands could not be broadcast together" in str(
+        execinfo
+    ) or "inconsistent shapes" in str(execinfo)
 
     with pytest.raises(NotImplementedError):
         a *= 1

@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.parametrize("expr", vlin.expressions)
-@pytest.mark.parametrize("solver", ['scipy', 'cylp'])
+@pytest.mark.parametrize("solver", ["scipy", "cylp"])
 def test_trivial_fully_linear(expr, solver):
     m = vlin.Model(expr=expr, max_vars=4)
     a = m.var(3)
@@ -16,7 +16,7 @@ def test_trivial_fully_linear(expr, solver):
 
 
 @pytest.mark.parametrize("expr", vlin.expressions)
-@pytest.mark.parametrize("solver", ['cylp'])
+@pytest.mark.parametrize("solver", ["cylp"])
 def test_trivial_milp(expr, solver):
     m = vlin.Model(expr=expr, max_vars=4)
     a = m.var(3, integer=np.array([False, True, False]))

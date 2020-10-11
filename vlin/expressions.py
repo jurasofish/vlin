@@ -166,7 +166,6 @@ class ExprNumpy(Expr, np.ndarray):
 
 
 class ExprCSC(Expr, sparse.csc_matrix):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -201,8 +200,8 @@ class ExprCSC(Expr, sparse.csc_matrix):
             elif self.shape[0] == 1:
                 a, b = other, self
             else:
-                raise ValueError(f'inconsistent shapes: {self.shape}, {other.shape}')
-            return self.__class__(a.raw() + b.vstack([b]*a.shape[0]).raw())
+                raise ValueError(f"inconsistent shapes: {self.shape}, {other.shape}")
+            return self.__class__(a.raw() + b.vstack([b] * a.shape[0]).raw())
 
         data = np.ones(self.shape[0]) * other
         rows = np.arange(self.shape[0], dtype=np.int32)
@@ -217,7 +216,7 @@ class ExprCSC(Expr, sparse.csc_matrix):
         return self.__class__(self.multiply(other))
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {super().__repr__()[1:]}'
+        return f"<{self.__class__.__name__}: {super().__repr__()[1:]}"
 
     def __getitem__(self, key):
         """ Force result to be 2D. """

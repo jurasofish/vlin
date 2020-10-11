@@ -47,10 +47,10 @@ class Model:
     def combine_cons(self) -> Expr:
         return self.expr.vstack(self.cons)
 
-    def solve(self, solver='scipy', **kwargs):
-        if solver.lower() == 'scipy':
+    def solve(self, solver="scipy", **kwargs):
+        if solver.lower() == "scipy":
             return self.solve_scipy(**kwargs)
-        elif solver.lower() == 'cylp':
+        elif solver.lower() == "cylp":
             return self.solve_cylp(**kwargs)
 
     def solve_scipy(self, **kwargs):
@@ -80,7 +80,9 @@ class Model:
         n = int(self.next_var_idx - 1)  # Number of variables.
 
         # Maximize c@x s.t. A@x <= b  (variable bounds done by constraints)
-        c = self.objective.rawdense().squeeze()[1 : n + 1]  # Objective coefficients, no constants.
+        c = self.objective.rawdense().squeeze()[
+            1 : n + 1
+        ]  # Objective coefficients, no constants.
         A = cons.raw()[:, 1 : n + 1]  # Constraint coefficients.
         b = cons[:, 0].rawdense().squeeze() * -1.0  # Constraint constants.
 
