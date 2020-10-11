@@ -47,7 +47,13 @@ class Model:
     def combine_cons(self) -> Expr:
         return self.expr.vstack(self.cons)
 
-    def solve_scipy(self):
+    def solve(self, solver='scipy', **kwargs):
+        if solver.lower() == 'scipy':
+            return self.solve_scipy(**kwargs)
+        elif solver.lower() == 'cylp':
+            return self.solve_cylp(**kwargs)
+
+    def solve_scipy(self, **kwargs):
         if not np.isclose(self.int_vars.sum(), 0):
             raise vlin.IntegerNotSupported(
                 "scipy linprog does not support integer variables."
@@ -57,15 +63,15 @@ class Model:
         cons = self.combine_cons()
 
         res = linprog(
-            c=self.objective[1:],  # Remove constants,
+            c=self.objective.rawdense().squeeze()[1:],  # Remove constants,
             A_ub=cons[:, 1:],  # All but the constants
-            b_ub=cons[:, 0] * -1.0,  # Constants only
+            b_ub=cons[:, 0].rawdense().squeeze() * -1.0,  # Constants only
             bounds=(None, None),
         )
-        x = np.hstack([[0], res.x])
+        x = np.hstack([[1], res.x])
         return res, x
 
-    def solve_cylp(self, verbose: bool = True):
+    def solve_cylp(self, verbose: bool = True, **kwargs):
         """ Inspired by the cvxpy cbc layer, ty :) """
         from cylp.cy import CyClpSimplex
         from cylp.py.modeling.CyLPModel import CyLPModel, CyLPArray
